@@ -1,2 +1,2 @@
 # cornerstonedigital.dev
-Static public pages for Cornerstone Digital app policies
+Static public site for Cornerstone Digital.
