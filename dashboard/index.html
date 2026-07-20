@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Corner Stone Digital’s source-conscious signal dashboard, threat radar, and verified incident reviews."
+    />
+    <meta name="theme-color" content="#f3efe6" />
+    <title>Intelligence Dashboard | Cornerstone Digital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Caslon+Display&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <a class="brand" href="#/" aria-label="Cornerstone Digital dashboard home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Corner Stone <em>Digital</em></span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary navigation">
+        <a href="#/signals">Signal desk</a>
+        <a href="#/radar">Threat radar</a>
+        <a href="#/incidents">Incidents</a>
+        <a href="#/standards">Standards</a>
+        <a href="https://cornerstonedigital.dev/">Main site</a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-button" id="search-button" aria-label="Search" title="Search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+        </button>
+        <a class="button button-dark desktop-subscribe" href="#/subscribe">Subscribe</a>
+        <button class="menu-button" id="menu-button" aria-expanded="false" aria-controls="mobile-menu">Menu</button>
+      </div>
+      <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
+        <a href="#/signals">Signal desk</a>
+        <a href="#/radar">Threat radar</a>
+        <a href="#/incidents">Incidents</a>
+        <a href="#/standards">Standards</a>
+        <a href="https://cornerstonedigital.dev/">Main site</a>
+      </nav>
+    </header>
+
+    <main id="main"></main>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <span class="brand-mark brand-mark-light" aria-hidden="true"><i></i><i></i><i></i></span>
+        <p>Corner Stone <em>Digital</em></p>
+      </div>
+      <p class="footer-statement">Signal over noise.<br />Context over reaction.</p>
+      <div class="footer-links">
+        <a href="#/signals">Signal desk</a>
+        <a href="#/radar">Threat radar</a>
+        <a href="#/incidents">Incidents</a>
+        <a href="#/standards">Editorial standards</a>
+        <a href="https://cornerstonedigital.dev/">Main site</a>
+        <a href="mailto:admin@cornerstonedigital.dev">Contact</a>
+        <span>© <span id="year"></span></span>
+      </div>
+    </footer>
+
+    <dialog class="search-dialog" id="search-dialog">
+      <form method="dialog" class="search-header">
+        <label for="search-input">Search the briefing</label>
+        <button class="icon-button" value="close" aria-label="Close search">×</button>
+      </form>
+      <input id="search-input" type="search" placeholder="Try “infrastructure” or “policy”" autocomplete="off" />
+      <div id="search-results" class="search-results" aria-live="polite"></div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="content/content-data.js"></script>
+    <script src="app.js?v=visual-overview-1"></script>
+  </body>
+</html>
