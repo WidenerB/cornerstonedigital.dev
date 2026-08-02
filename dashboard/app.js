@@ -152,6 +152,12 @@ function signalRows(limit = signals.length) {
   </div>`).join("");
 }
 
+function incidentIdentifier(incident) {
+  const chronological = [...publishedIncidents].sort((a, b) => a.eventDate.localeCompare(b.eventDate));
+  const sequence = Math.max(chronological.findIndex(item => item.slug === incident.slug) + 1, 1);
+  return `EVT-${incident.eventDate.slice(0, 4)}-${String(sequence).padStart(3, "0")}`;
+}
+
 function homePage() {
   return `<section class="bulletin-hero">
       <div class="bulletin-heading">
@@ -169,6 +175,10 @@ function homePage() {
       </aside>
     </section>
     <section class="bulletin-notice" aria-label="Bulletin status"><span class="bulletin-dot"></span><strong>Public status</strong><p>Manually reviewed bulletin. New discoveries remain private until verified and approved.</p><span>Next update: when verified conditions change</span></section>
+    <section class="bulletin-content bulletin-incident-section bulletin-incident-priority">
+      <div class="bulletin-section-heading"><div><p class="eyebrow">Verified record</p><h2>Latest incident review</h2></div><p>Location, identifiers, and trend context are presented up front. A contained event is not presented as an active alert.</p></div>
+      ${featuredIncidentCard() || `<p class="empty-state">No verified incident record is currently published.</p>`}
+    </section>
     <section class="bulletin-content">
       <div class="bulletin-section-heading"><div><p class="eyebrow">Operational picture</p><h2>What ministry teams should know now</h2></div><p>National monitoring is context—not a substitute for local police, emergency management, weather, or public-health instructions.</p></div>
       <div class="bulletin-lanes">${bulletinLanes.map(lane => `<article class="bulletin-lane">
@@ -184,11 +194,7 @@ function homePage() {
         <li><span>03</span><p>Check official weather and local emergency notices before gatherings.</p></li>
         <li><span>04</span><p>Remind staff and volunteers what to report, where to report it, and what not to amplify online.</p></li>
       </ol></div>
-      <aside class="bulletin-source-note"><p class="eyebrow">Confidence note</p><h2>What this bulletin does—and does not—say</h2><p><strong>Established:</strong> the published incident record below passed the source and editorial gates.</p><p><strong>Monitoring:</strong> the lanes above are continuing readiness categories, not claims of active attacks.</p><p><strong>Not established:</strong> no nationwide threat level is inferred from social posts, headlines, or a single uncorroborated report.</p><a class="rail-link" href="#/signals">Open monitoring lanes →</a></aside>
-    </section>
-    <section class="bulletin-content bulletin-incident-section">
-      <div class="bulletin-section-heading"><div><p class="eyebrow">Verified record</p><h2>Latest incident review</h2></div><p>Historical incident context is retained for learning. A contained event is not presented as an active alert.</p></div>
-      ${featuredIncidentCard() || `<p class="empty-state">No verified incident record is currently published.</p>`}
+      <aside class="bulletin-source-note"><p class="eyebrow">Confidence note</p><h2>What this bulletin does—and does not—say</h2><p><strong>Established:</strong> the published incident record on this page passed the source and editorial gates.</p><p><strong>Monitoring:</strong> the lanes above are continuing readiness categories, not claims of active attacks.</p><p><strong>Not established:</strong> no nationwide threat level is inferred from social posts, headlines, or a single uncorroborated report.</p><a class="rail-link" href="#/signals">Open monitoring lanes →</a></aside>
     </section>`;
 }
 
@@ -252,17 +258,21 @@ function featuredIncidentCard() {
   if (!incident) return "";
   const date = new Date(`${incident.eventDate}T12:00:00Z`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
   const location = `${incident.location.city}, ${incident.location.region}`;
+  const eventId = incidentIdentifier(incident);
+  const trendAssessment = publishedIncidents.length < 3 ? "No trend established" : "Developing comparison set";
   const primary = incident.sources.find(source => source.type === "primary") || incident.sources[0];
   const secondary = incident.sources.find(source => source !== primary);
   return `<article class="featured-incident">
     <div class="featured-incident-label">
-      <span class="incident-status-dot"></span><span>Verified incident review</span><time>${date}</time>
+      <span class="incident-status-dot"></span><span>Verified incident review</span><span class="featured-event-id">${eventId}</span><time>${date}</time>
     </div>
+    <dl class="featured-incident-readout"><div><dt>Location</dt><dd>${location}</dd></div><div><dt>Identifier</dt><dd>${eventId}</dd></div><div><dt>Status</dt><dd>${categoryLabel(incident.currentStatus)}</dd></div><div><dt>Trend assessment</dt><dd>${trendAssessment}</dd></div></dl>
     <div class="featured-incident-body">
       <div><p class="incident-location">${location}</p><h2>${incident.title}</h2><span class="incident-outcome">${incident.outcome}</span></div>
       <div class="incident-summary">
         <p>${incident.deck}</p>
         <p><strong>Preparedness note:</strong> ${incident.responseLessons[0]}</p>
+        <div class="featured-identifiers" aria-label="Event identifiers">${incident.categories.map(category => `<span>${categoryLabel(category)}</span>`).join("")}</div>
         <div class="incident-sources">
           ${primary ? `<a href="${primary.url}" target="_blank" rel="noreferrer">${primary.publisher} ↗</a>` : ""}
           ${secondary ? `<a href="${secondary.url}" target="_blank" rel="noreferrer">${secondary.publisher} ↗</a>` : ""}
@@ -288,10 +298,10 @@ function categoryLabel(value) {
 function eventLedger() {
   const events = orderedIncidents();
   if (!events.length) return `<p class="empty-state">No verified security events have been published.</p>`;
-  return events.map((incident, index) => {
+  return events.map(incident => {
     const date = new Date(`${incident.eventDate}T12:00:00Z`);
     const sourceNames = incident.sources.map(source => source.publisher).join(" · ");
-    const eventId = `EVT-${date.getUTCFullYear()}-${String(events.length - index).padStart(3, "0")}`;
+    const eventId = incidentIdentifier(incident);
     return `<article class="security-event" data-severity="${incident.severityAtEvent}">
       <time class="security-event-date" datetime="${incident.eventDate}"><span>${date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })}</span><strong>${date.getUTCDate()}</strong><small>${date.getUTCFullYear()}</small></time>
       <div class="security-event-body">
