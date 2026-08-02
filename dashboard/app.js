@@ -288,18 +288,19 @@ function categoryLabel(value) {
 function eventLedger() {
   const events = orderedIncidents();
   if (!events.length) return `<p class="empty-state">No verified security events have been published.</p>`;
-  return events.map(incident => {
+  return events.map((incident, index) => {
     const date = new Date(`${incident.eventDate}T12:00:00Z`);
     const sourceNames = incident.sources.map(source => source.publisher).join(" · ");
-    return `<article class="security-event">
+    const eventId = `EVT-${date.getUTCFullYear()}-${String(events.length - index).padStart(3, "0")}`;
+    return `<article class="security-event" data-severity="${incident.severityAtEvent}">
       <time class="security-event-date" datetime="${incident.eventDate}"><span>${date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })}</span><strong>${date.getUTCDate()}</strong><small>${date.getUTCFullYear()}</small></time>
       <div class="security-event-body">
-        <div class="security-event-meta"><span class="severity severity-${incident.severityAtEvent}">${incident.severityAtEvent}</span><span>${incident.location.city}, ${incident.location.region}</span><span>${incident.currentStatus}</span></div>
+        <div class="security-event-meta"><span class="event-id">${eventId}</span><span class="severity severity-${incident.severityAtEvent}">${incident.severityAtEvent}</span><span>${incident.location.city}, ${incident.location.region}</span><span>${incident.currentStatus}</span></div>
         <h2>${incident.title}</h2>
         <p>${incident.deck}</p>
         <div class="security-event-tags">${incident.categories.map(category => `<span>${categoryLabel(category)}</span>`).join("")}</div>
       </div>
-      <div class="security-event-action"><span>${incident.sources.length} retained source${incident.sources.length === 1 ? "" : "s"}</span><small>${sourceNames}</small><a class="button button-dark" href="incidents/${incident.slug}.html">Full record</a></div>
+      <div class="security-event-action"><span class="source-status"><i aria-hidden="true"></i>${incident.sources.length} retained source${incident.sources.length === 1 ? "" : "s"}</span><small>${sourceNames}</small><a class="button button-dark" href="incidents/${incident.slug}.html">View record <span aria-hidden="true">→</span></a></div>
     </article>`;
   }).join("");
 }
@@ -321,16 +322,19 @@ function trendCards() {
 function radarPage() {
   const events = orderedIncidents();
   const latestUpdate = events[0]?.updatedAt ? readableIncidentDate(events[0].updatedAt.slice(0, 10)) : "No public update";
+  const activeEvents = events.filter(event => !["contained", "resolved"].includes(event.currentStatus)).length;
   return `<section class="page-shell event-ledger-page">
-    <div class="page-intro compact-page-intro"><h1>Threat radar</h1><p>Verified security events, presented newest first. Dates, status, location, and the essential event summary stay visible at a glance.</p></div>
-    <div class="radar-status-line"><p class="eyebrow">Verified public records only</p><span>Latest retained update: ${latestUpdate}</span></div>
+    <header class="radar-command">
+      <div class="radar-command-copy"><p class="readout-live"><i aria-hidden="true"></i>Public intelligence readout</p><h1>Threat radar</h1><p>Verified security events, presented newest first. Dates, status, location, and the essential assessment remain visible at a glance.</p></div>
+      <div class="radar-command-stamp"><span>Current public posture</span><strong>${activeEvents ? "Review active records" : "Routine monitoring"}</strong><time>Updated ${latestUpdate}</time><small>Verified public records only</small></div>
+    </header>
     <div class="radar-overview" aria-label="Threat radar overview">
       <div><strong>${events.length}</strong><span>Verified events</span></div>
-      <div><strong>${events.filter(event => !["contained", "resolved"].includes(event.currentStatus)).length}</strong><span>Active status</span></div>
+      <div><strong>${activeEvents}</strong><span>Active status</span></div>
       <div><strong>${events.length < 3 ? "Limited" : "Developing"}</strong><span>Trend confidence</span></div>
     </div>
-    <section class="trend-section" aria-labelledby="trend-heading"><div class="bulletin-section-heading"><div><p class="eyebrow">Relevant trends</p><h2 id="trend-heading">What the event record supports</h2></div><p>Counts reflect this site’s verified public archive, not the total number of events nationwide.</p></div><div class="trend-grid">${trendCards()}</div></section>
-    <section class="event-ledger" aria-labelledby="event-ledger-heading"><div class="bulletin-section-heading"><div><p class="eyebrow">Running event list</p><h2 id="event-ledger-heading">Important security events</h2></div><p>Newest first. Events appear only after primary-source verification, uncertainty review, and editorial approval.</p></div>${eventLedger()}</section>
+    <section class="trend-section" aria-labelledby="trend-heading"><div class="readout-section-head"><div><span>01 / Assessment</span><h2 id="trend-heading">What the record supports</h2></div><p>Counts reflect this site’s verified public archive, not the total number of events nationwide.</p></div><div class="trend-grid">${trendCards()}</div></section>
+    <section class="event-ledger" aria-labelledby="event-ledger-heading"><div class="readout-section-head"><div><span>02 / Event ledger</span><h2 id="event-ledger-heading">Important security events</h2></div><p>Newest first. Published after source verification, uncertainty review, and editorial approval.</p></div><div class="ledger-column-head" aria-hidden="true"><span>Date</span><span>Verified event and assessment</span><span>Source record</span></div>${eventLedger()}</section>
     <div class="radar-method"><p><strong>Trend standard:</strong> an event may be important without representing a trend. Recurrence, geography, method, target type, outcome, and later-established facts are compared before directional language is used.</p></div>
   </section>`;
 }
