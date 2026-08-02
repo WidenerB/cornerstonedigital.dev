@@ -97,19 +97,19 @@ const articles = [
 ];
 
 const signals = [
-  { id: "PHY-104", severity: "Watch", title: "Regional house-of-worship safety advisory", detail: "Monitoring verified law-enforcement and denominational safety notices.", domain: "Physical safety", updated: "18 min", trend: "Steady", confidence: "Medium", horizon: "Near term", source: "Official safety advisories", angle: 240, radius: 35 },
-  { id: "POL-218", severity: "Info", title: "Religious-liberty policy calendar", detail: "Upcoming hearings, court dates, and public comment windows indexed.", domain: "Policy", updated: "1 hr", trend: "Steady", confidence: "High", horizon: "30 days", source: "Court and legislative calendars", angle: 315, radius: 66 },
-  { id: "ONL-307", severity: "Elevated", title: "High-volume hostile narrative event", detail: "Rapid claim spread involving Christian institutions; verification remains incomplete.", domain: "Online safety", updated: "2 hr", trend: "Rising", confidence: "Medium", horizon: "Immediate", source: "Multi-source media monitor", angle: 28, radius: 22 },
-  { id: "WXR-411", severity: "Watch", title: "Severe weather readiness for weekend services", detail: "Review official forecasts, shelter plans, and congregation communications.", domain: "Weather", updated: "3 hr", trend: "Steady", confidence: "High", horizon: "72 hours", source: "Official forecast products", angle: 102, radius: 42 },
-  { id: "CAR-509", severity: "Info", title: "Community-care bulletin indexed", detail: "New public-health guidance relevant to congregational care has been added.", domain: "Community care", updated: "5 hr", trend: "Steady", confidence: "High", horizon: "30 days", source: "Public health bulletins", angle: 172, radius: 68 }
+  { id: "PHY-104", severity: "Watch", title: "House-of-worship safety advisories", detail: "Maintain routine awareness of verified law-enforcement and denominational safety notices.", domain: "Physical safety", updated: "Manual review", trend: "Steady", confidence: "Medium", horizon: "Ongoing", source: "Official safety advisories", angle: 240, radius: 45 },
+  { id: "POL-218", severity: "Info", title: "Religious-liberty policy calendar", detail: "Track hearings, court dates, and public comment windows without treating policy activity as a safety threat.", domain: "Policy", updated: "Manual review", trend: "Steady", confidence: "High", horizon: "30 days", source: "Court and legislative calendars", angle: 315, radius: 70 },
+  { id: "ONL-307", severity: "Info", title: "Online narrative and impersonation watch", detail: "Potential threats require account verification, preserved evidence, and independent corroboration.", domain: "Online safety", updated: "Manual review", trend: "Steady", confidence: "Medium", horizon: "Ongoing", source: "Multi-source media monitor", angle: 28, radius: 62 },
+  { id: "WXR-411", severity: "Watch", title: "Local severe-weather readiness", detail: "Check official local alerts before services and review shelter and congregation communication plans.", domain: "Weather", updated: "Check locally", trend: "Variable", confidence: "High", horizon: "72 hours", source: "National Weather Service", angle: 102, radius: 48 },
+  { id: "CAR-509", severity: "Info", title: "Community-care guidance", detail: "Review relevant public-health guidance before changing congregational care practices.", domain: "Community care", updated: "Manual review", trend: "Steady", confidence: "High", horizon: "30 days", source: "Public health bulletins", angle: 172, radius: 72 }
 ];
 
 const publishedIncidents = window.CSD_CONTENT?.incidents || [];
 
-const briefings = [
-  { time: "12:40 PM", title: "New public guidance added to the source monitor", href: "#/signals" },
-  { time: "11:15 AM", title: "Three signals moved to active observation", href: "#/signals" },
-  { time: "9:30 AM", title: "Morning media and policy scan complete", href: "#/signals" }
+const bulletinLanes = [
+  { status: "Monitor", tone: "watch", title: "Physical safety", detail: "Keep normal layered security in place and route specific concerns to local law enforcement.", source: "FBI national releases", href: "https://www.fbi.gov/feeds/national-press-releases" },
+  { status: "Check locally", tone: "info", title: "Severe weather", detail: "Conditions are local. Review active alerts before services, travel, and outdoor ministry events.", source: "National Weather Service", href: "https://www.weather.gov/alerts" },
+  { status: "Review controls", tone: "info", title: "Cybersecurity", detail: "Maintain account recovery, backups, multifactor authentication, and a clear phishing-report process.", source: "CISA advisories", href: "https://www.cisa.gov/news-events/cybersecurity-advisories" }
 ];
 
 const main = document.querySelector("#main");
@@ -132,37 +132,47 @@ function signalRows(limit = signals.length) {
   return signals.slice(0, limit).map((signal) => `<div class="signal-row">
     <span class="severity severity-${signal.severity.toLowerCase()}">${signal.severity}</span>
     <div><h3>${signal.title}</h3><p>${signal.detail}</p></div>
-    <span class="signal-time">${signal.updated} ago</span>
+    <span class="signal-time">${signal.updated}</span>
   </div>`).join("");
 }
 
 function homePage() {
-  const lead = articles[0];
-  return `<section class="home-hero">
-      <a class="lead-story" href="#/article/${lead.slug}">
-        <div class="lead-content">
-          <p class="eyebrow">Lead analysis</p>
-          <h1>${lead.title}</h1>
-          <p class="lead-deck">${lead.deck}</p>
-          ${meta(lead)}
-        </div>
-      </a>
-      <aside class="hero-rail">
-        <div class="rail-header"><h2>Today’s brief</h2><span class="live-mark">Preview</span></div>
-        <div class="brief-list">${briefings.map(item => `<a class="brief-item" href="${item.href}"><time>${item.time}</time><h3>${item.title}</h3></a>`).join("")}</div>
-        <a class="rail-link" href="#/signals">Open the signal desk →</a>
+  return `<section class="bulletin-hero">
+      <div class="bulletin-heading">
+        <div class="bulletin-kicker"><span>Church safety threat bulletin</span><time datetime="2026-08-02">August 2, 2026</time></div>
+        <p class="eyebrow">Public intelligence brief</p>
+        <h1>Routine vigilance.<br><em>Clear next steps.</em></h1>
+        <p class="bulletin-deck">A source-conscious readiness brief for churches and ministry teams. This bulletin does not assert a verified nationwide church-specific threat; local conditions and official instructions always take priority.</p>
+        <div class="bulletin-actions"><a class="button bulletin-button" href="#/incidents">Review verified incidents</a><a class="bulletin-text-link" href="#/standards">How verification works →</a></div>
+      </div>
+      <aside class="posture-card" aria-label="Current public posture: level one of five, routine">
+        <span>Current public posture</span>
+        <div class="posture-reading"><strong>1</strong><div><em>of 5</em><b>Routine</b></div></div>
+        <div class="posture-scale" aria-hidden="true"><i class="active"></i><i></i><i></i><i></i><i></i></div>
+        <p>No active nationwide alert is being published here. Continue normal awareness and verify local conditions.</p>
       </aside>
     </section>
-    <section class="section">
-      <div class="section-heading"><h2>Recent dispatches</h2><p>Reporting and analysis designed to remain useful after the feed moves on.</p></div>
-      <div class="article-grid">${articles.slice(1, 4).map(articleCard).join("")}</div>
+    <section class="bulletin-notice" aria-label="Bulletin status"><span class="bulletin-dot"></span><strong>Public status</strong><p>Manually reviewed bulletin. New discoveries remain private until verified and approved.</p><span>Next update: when verified conditions change</span></section>
+    <section class="bulletin-content">
+      <div class="bulletin-section-heading"><div><p class="eyebrow">Operational picture</p><h2>What ministry teams should know now</h2></div><p>National monitoring is context—not a substitute for local police, emergency management, weather, or public-health instructions.</p></div>
+      <div class="bulletin-lanes">${bulletinLanes.map(lane => `<article class="bulletin-lane">
+        <div class="bulletin-lane-top"><span class="severity severity-${lane.tone}">${lane.status}</span><span>Official source</span></div>
+        <h3>${lane.title}</h3><p>${lane.detail}</p>
+        <a href="${lane.href}" target="_blank" rel="noreferrer">${lane.source} ↗</a>
+      </article>`).join("")}</div>
     </section>
-    <section class="section signal-preview">
-      <div class="section-heading"><h2>The signal desk</h2><p>A calm, source-conscious view of developments worth attention—not a machine for manufacturing alarm.</p></div>
-      <div class="signal-board">
-        <div><div class="threat-gauge"><span class="gauge-label">Current posture / illustrative</span><strong class="gauge-number">2<sup>of 5</sup></strong><div class="gauge-scale"><span class="active"></span><span class="active"></span><span></span><span></span><span></span></div></div><p class="demo-note">Demonstration data only. Verified incident records are published separately with source links.</p></div>
-        <div class="signal-list">${signalRows(3)}<a class="rail-link" href="#/signals">View all signals →</a></div>
-      </div>
+    <section class="bulletin-content bulletin-two-column">
+      <div class="bulletin-actions-panel"><p class="eyebrow">Readiness checklist</p><h2>Four actions for this week</h2><ol>
+        <li><span>01</span><p>Confirm who calls emergency services and who meets responding officers.</p></li>
+        <li><span>02</span><p>Review entrances, exits, parking coverage, and reunification procedures.</p></li>
+        <li><span>03</span><p>Check official weather and local emergency notices before gatherings.</p></li>
+        <li><span>04</span><p>Remind staff and volunteers what to report, where to report it, and what not to amplify online.</p></li>
+      </ol></div>
+      <aside class="bulletin-source-note"><p class="eyebrow">Confidence note</p><h2>What this bulletin does—and does not—say</h2><p><strong>Established:</strong> the published incident record below passed the source and editorial gates.</p><p><strong>Monitoring:</strong> the lanes above are continuing readiness categories, not claims of active attacks.</p><p><strong>Not established:</strong> no nationwide threat level is inferred from social posts, headlines, or a single uncorroborated report.</p><a class="rail-link" href="#/signals">Open monitoring lanes →</a></aside>
+    </section>
+    <section class="bulletin-content bulletin-incident-section">
+      <div class="bulletin-section-heading"><div><p class="eyebrow">Verified record</p><h2>Latest incident review</h2></div><p>Historical incident context is retained for learning. A contained event is not presented as an active alert.</p></div>
+      ${featuredIncidentCard() || `<p class="empty-state">No verified incident record is currently published.</p>`}
     </section>`;
 }
 
@@ -174,13 +184,13 @@ function latestPage() {
 }
 
 function signalsPage() {
-  return `<section class="page-shell"><div class="page-intro"><h1>Signal desk</h1><p>A working view of notable developments across infrastructure, public information, policy, weather, and health.</p></div>
-    <p class="eyebrow">Demonstration environment — not an active alerting service</p>
+  return `<section class="page-shell"><div class="page-intro"><h1>Signal desk</h1><p>A working view of continuing monitoring lanes across physical safety, public information, policy, weather, and community care.</p></div>
+    <p class="eyebrow">Supporting monitoring lanes — no automated public alerts</p>
     <div class="dashboard-summary">
-      <div class="summary-stat"><span>Active signals</span><strong>${signals.length}</strong></div>
-      <div class="summary-stat"><span>Elevated</span><strong>${signals.filter(s => s.severity === "Elevated").length}</strong></div>
+      <div class="summary-stat"><span>Monitoring lanes</span><strong>${signals.length}</strong></div>
+      <div class="summary-stat"><span>Elevated public alerts</span><strong>${signals.filter(s => s.severity === "Elevated").length}</strong></div>
       <div class="summary-stat"><span>Domains</span><strong>${new Set(signals.map(s => s.domain)).size}</strong></div>
-      <div class="summary-stat"><span>Posture</span><strong>Watch</strong></div>
+      <div class="summary-stat"><span>Posture</span><strong>Routine</strong></div>
     </div>
     <div class="filter-bar" aria-label="Filter signals">${["All", "Elevated", "Watch", "Info"].map((f, i) => `<button class="filter-button ${i === 0 ? "active" : ""}" data-signal-filter="${f}">${f}</button>`).join("")}</div>
     <div class="signals-table" id="signals-table">${dashboardRows(signals)}</div>
@@ -217,7 +227,7 @@ function radarDetail(signal) {
       <div><dt>Horizon</dt><dd>${signal.horizon}</dd></div>
       <div><dt>Trend</dt><dd>${signal.trend}</dd></div>
       <div class="radar-source"><dt>Source class</dt><dd>${signal.source}</dd></div>
-      <div><dt>Updated</dt><dd>${signal.updated} ago</dd></div>
+      <div><dt>Update mode</dt><dd>${signal.updated}</dd></div>
     </dl>`;
 }
 
@@ -254,7 +264,7 @@ function radarPage() {
     <div class="page-intro"><h1>Threat radar</h1><p>A church and Christian-community safety view of verified incidents and developing signals. Points closer to the center deserve earlier review.</p></div>
     <div class="radar-status-line">
       <p class="eyebrow">Demonstration environment — not an active alerting service</p>
-      <span>Last scan: 12 minutes ago</span>
+      <span>Public updates require manual review</span>
     </div>
     ${featuredIncidentCard()}
     <div class="radar-controls">
