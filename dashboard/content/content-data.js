@@ -60,5 +60,28 @@ window.CSD_CONTENT = {
       },
       "permanentUrl": "https://cornerstonedigital.dev/dashboard/incidents/wesley-memorial-high-point-june-2026.html"
     }
+  ],
+  "bulletins": [
+    {
+      "id": "weekly-2026-08-02",
+      "issue": "Week ending August 2, 2026",
+      "periodStart": "2026-07-27",
+      "periodEnd": "2026-08-02",
+      "publishedAt": "2026-08-02",
+      "posture": "Routine",
+      "headline": "No new verified public event; local readiness remains the priority",
+      "summary": "No newly verified incident entered the public archive during this seven-day period. The latest retained incident remains contained, and the available record does not support a broader national pattern.",
+      "actions": [
+        "Confirm weekend safety-team assignments and emergency-service roles.",
+        "Check official local weather and emergency notices before gatherings.",
+        "Review account recovery, multifactor authentication, and phishing reporting.",
+        "Escalate specific threats to law enforcement rather than amplifying them online."
+      ],
+      "narrativeAudit": {
+        "level": "insufficient-sample",
+        "confidence": "high",
+        "note": "The verified public sample is too small for claims about national direction, frequency, motive, or media narrative convergence."
+      }
+    }
   ]
 };

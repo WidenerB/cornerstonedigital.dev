@@ -112,6 +112,22 @@ const bulletinLanes = [
   { status: "Review controls", tone: "info", title: "Cybersecurity", detail: "Maintain account recovery, backups, multifactor authentication, and a clear phishing-report process.", source: "CISA advisories", href: "https://www.cisa.gov/news-events/cybersecurity-advisories" }
 ];
 
+const weeklyBulletin = window.CSD_CONTENT?.bulletins?.[0] || {
+  issue: "Week ending August 2, 2026",
+  periodStart: "2026-07-27",
+  periodEnd: "2026-08-02",
+  publishedAt: "2026-08-02",
+  posture: "Routine",
+  headline: "No new verified public event; local readiness remains the priority",
+  summary: "No newly verified incident entered the public archive during this seven-day period. The latest retained incident remains contained, and the available record does not support a broader national pattern.",
+  actions: [
+    "Confirm weekend safety-team assignments and emergency-service roles.",
+    "Check official local weather and emergency notices before gatherings.",
+    "Review account recovery, multifactor authentication, and phishing reporting.",
+    "Escalate specific threats to law enforcement rather than amplifying them online."
+  ]
+};
+
 const main = document.querySelector("#main");
 const toast = document.querySelector("#toast");
 
@@ -143,7 +159,7 @@ function homePage() {
         <p class="eyebrow">Public intelligence brief</p>
         <h1>Routine vigilance.<br><em>Clear next steps.</em></h1>
         <p class="bulletin-deck">A source-conscious readiness brief for churches and ministry teams. This bulletin does not assert a verified nationwide church-specific threat; local conditions and official instructions always take priority.</p>
-        <div class="bulletin-actions"><a class="button bulletin-button" href="#/incidents">Review verified incidents</a><a class="bulletin-text-link" href="#/standards">How verification works →</a></div>
+        <div class="bulletin-actions"><a class="button bulletin-button" href="#/incidents">Review verified incidents</a><a class="bulletin-text-link" href="#/weekly">Read weekly bulletin →</a><a class="bulletin-text-link" href="#/standards">How verification works →</a></div>
       </div>
       <aside class="posture-card" aria-label="Current public posture: level one of five, routine">
         <span>Current public posture</span>
@@ -257,48 +273,89 @@ function featuredIncidentCard() {
   </article>`;
 }
 
+function readableIncidentDate(value) {
+  return new Date(`${value}T12:00:00Z`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+}
+
+function orderedIncidents() {
+  return [...publishedIncidents].sort((a, b) => b.eventDate.localeCompare(a.eventDate));
+}
+
+function categoryLabel(value) {
+  return value.replaceAll("-", " ").replace(/\b\w/g, letter => letter.toUpperCase());
+}
+
+function eventLedger() {
+  const events = orderedIncidents();
+  if (!events.length) return `<p class="empty-state">No verified security events have been published.</p>`;
+  return events.map(incident => {
+    const date = new Date(`${incident.eventDate}T12:00:00Z`);
+    const sourceNames = incident.sources.map(source => source.publisher).join(" · ");
+    return `<article class="security-event">
+      <time class="security-event-date" datetime="${incident.eventDate}"><span>${date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })}</span><strong>${date.getUTCDate()}</strong><small>${date.getUTCFullYear()}</small></time>
+      <div class="security-event-body">
+        <div class="security-event-meta"><span class="severity severity-${incident.severityAtEvent}">${incident.severityAtEvent}</span><span>${incident.location.city}, ${incident.location.region}</span><span>Status: ${incident.currentStatus}</span></div>
+        <h2>${incident.title}</h2><p>${incident.deck}</p>
+        <div class="security-event-tags">${incident.categories.map(category => `<span>${categoryLabel(category)}</span>`).join("")}</div>
+        <dl><div><dt>Outcome</dt><dd>${incident.outcome}</dd></div><div><dt>Source record</dt><dd>${sourceNames}</dd></div><div><dt>Trend use</dt><dd>Retained for comparison; one event does not establish a pattern.</dd></div></dl>
+      </div>
+      <div class="security-event-action"><span>${incident.sources.length} retained sources</span><a class="button button-dark" href="incidents/${incident.slug}.html">Open full record</a></div>
+    </article>`;
+  }).join("");
+}
+
+function trendCards() {
+  const events = orderedIncidents();
+  const contained = events.filter(incident => incident.currentStatus === "contained" || incident.currentStatus === "resolved").length;
+  const categories = events.flatMap(incident => incident.categories || []);
+  const categoryCounts = categories.reduce((counts, category) => ({ ...counts, [category]: (counts[category] || 0) + 1 }), {});
+  const leadingCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const cards = [
+    { label: "Verified event volume", value: String(events.length), trend: events.length < 3 ? "Sample too small for a directional trend" : "Compare against the prior reporting period" },
+    { label: "Most represented domain", value: leadingCategory ? categoryLabel(leadingCategory) : "None", trend: events.length < 2 ? "Single-event representation only" : "Review for recurrence and geographic spread" },
+    { label: "Contained or resolved", value: `${contained} of ${events.length}`, trend: contained === events.length && events.length ? "No active status in the public event ledger" : "Review current-status labels" }
+  ];
+  return cards.map(card => `<article class="trend-card"><span>${card.label}</span><strong>${card.value}</strong><p>${card.trend}</p></article>`).join("");
+}
+
 function radarPage() {
-  const selected = signals.find(signal => signal.severity === "Elevated") || signals[0];
-  const domains = ["All domains", ...new Set(signals.map(signal => signal.domain))];
-  return `<section class="page-shell radar-page">
-    <div class="page-intro"><h1>Threat radar</h1><p>A church and Christian-community safety view of verified incidents and developing signals. Points closer to the center deserve earlier review.</p></div>
-    <div class="radar-status-line">
-      <p class="eyebrow">Demonstration environment — not an active alerting service</p>
-      <span>Public updates require manual review</span>
+  const events = orderedIncidents();
+  const latestUpdate = events[0]?.updatedAt ? readableIncidentDate(events[0].updatedAt.slice(0, 10)) : "No public update";
+  return `<section class="page-shell event-ledger-page">
+    <div class="page-intro"><h1>Threat radar</h1><p>A running, source-linked list of important church and ministry security events. Trend notes describe the public record without turning isolated incidents into national claims.</p></div>
+    <div class="radar-status-line"><p class="eyebrow">Verified public records only</p><span>Latest retained update: ${latestUpdate}</span></div>
+    <div class="dashboard-summary event-summary">
+      <div class="summary-stat"><span>Verified events</span><strong>${events.length}</strong></div>
+      <div class="summary-stat"><span>Active status</span><strong>${events.filter(event => !["contained", "resolved"].includes(event.currentStatus)).length}</strong></div>
+      <div class="summary-stat"><span>Represented regions</span><strong>${new Set(events.map(event => event.location.region)).size}</strong></div>
+      <div class="summary-stat"><span>Trend confidence</span><strong>${events.length < 3 ? "Limited" : "Developing"}</strong></div>
     </div>
-    ${featuredIncidentCard()}
-    <div class="radar-controls">
-      <label for="radar-domain">Domain
-        <select id="radar-domain">
-          ${domains.map(domain => `<option value="${domain}">${domain}</option>`).join("")}
-        </select>
-      </label>
-      <div class="radar-legend" aria-label="Severity legend">
-        <span><i class="legend-dot legend-elevated"></i>Elevated</span>
-        <span><i class="legend-dot legend-watch"></i>Watch</span>
-        <span><i class="legend-dot legend-info"></i>Information</span>
-      </div>
-    </div>
-    <div class="radar-layout">
-      <div class="radar-field" role="group" aria-label="Threat radar. Signals closer to the center have higher review priority.">
-        <div class="radar-ring radar-ring-outer"><span>Monitor</span></div>
-        <div class="radar-ring radar-ring-middle"><span>Watch</span></div>
-        <div class="radar-ring radar-ring-inner"><span>Review</span></div>
-        <div class="radar-axis radar-axis-horizontal"></div>
-        <div class="radar-axis radar-axis-vertical"></div>
-        <span class="radar-domain-label label-information">Online safety</span>
-        <span class="radar-domain-label label-weather">Weather</span>
-        <span class="radar-domain-label label-health">Community care</span>
-        <span class="radar-domain-label label-infrastructure">Physical safety</span>
-        <span class="radar-domain-label label-policy">Policy</span>
-        <div id="radar-marks">${radarMarks(signals, selected.id)}</div>
-      </div>
-      <aside class="radar-detail" id="radar-detail" aria-live="polite">${radarDetail(selected)}</aside>
-    </div>
-    <div class="radar-method">
-      <p><strong>How to read it:</strong> position reflects editorial review priority, not a prediction of harm. Every signal should retain a source trail, confidence label, owner, and update history before this becomes a live service.</p>
-    </div>
+    <section class="trend-section" aria-labelledby="trend-heading"><div class="bulletin-section-heading"><div><p class="eyebrow">Relevant trends</p><h2 id="trend-heading">What the event record supports</h2></div><p>Counts reflect this site’s verified public archive, not the total number of events nationwide.</p></div><div class="trend-grid">${trendCards()}</div></section>
+    <section class="event-ledger" aria-labelledby="event-ledger-heading"><div class="bulletin-section-heading"><div><p class="eyebrow">Running event list</p><h2 id="event-ledger-heading">Important security events</h2></div><p>Newest first. Events appear only after primary-source verification, uncertainty review, and editorial approval.</p></div>${eventLedger()}</section>
+    <div class="radar-method"><p><strong>Trend standard:</strong> an event may be important without representing a trend. Recurrence, geography, method, target type, outcome, and later-established facts are compared before directional language is used.</p></div>
   </section>`;
+}
+
+function weeklyPage() {
+  const events = orderedIncidents();
+  const periodEvents = events.filter(incident => incident.eventDate >= weeklyBulletin.periodStart && incident.eventDate <= weeklyBulletin.periodEnd);
+  const latest = events[0];
+  return `<article class="page-shell weekly-page">
+    <header class="weekly-header"><div><p class="eyebrow">${weeklyBulletin.issue}</p><h1>Weekly security bulletin</h1><p>${weeklyBulletin.headline}</p></div><div class="weekly-issue"><span>Public posture</span><strong>${weeklyBulletin.posture}</strong><time datetime="${weeklyBulletin.publishedAt}">Issued ${readableIncidentDate(weeklyBulletin.publishedAt)}</time></div></header>
+    <div class="weekly-summary">
+      <div><span>New verified events</span><strong>${periodEvents.length}</strong></div>
+      <div><span>Verified archive</span><strong>${events.length}</strong></div>
+      <div><span>Trend confidence</span><strong>${events.length < 3 ? "Limited" : "Developing"}</strong></div>
+    </div>
+    <section class="weekly-lead"><p class="eyebrow">Executive summary</p><h2>${weeklyBulletin.headline}</h2><p>${weeklyBulletin.summary}</p><button class="button button-outline" type="button" data-print-bulletin>Print bulletin</button></section>
+    <div class="weekly-grid">
+      <section><p class="eyebrow">Evidence and confidence</p><h2>What changed this week</h2><p>${periodEvents.length ? `${periodEvents.length} verified event record${periodEvents.length === 1 ? " was" : "s were"} added during this bulletin period.` : "No new incident passed the public verification and publication gates during this bulletin period."}</p><p>Discovery volume is not treated as event volume. Unverified feed items and social leads remain outside this public summary.</p></section>
+      <section><p class="eyebrow">Carry-forward record</p><h2>${latest ? latest.title : "No verified incident retained"}</h2><p>${latest ? `${latest.outcome}. ${latest.reportedNotEstablished?.[0] || "No additional uncertainty note is available."}` : "The public archive does not currently contain a verified incident."}</p>${latest ? `<a class="rail-link" href="incidents/${latest.slug}.html">Read the source record →</a>` : ""}</section>
+      <section><p class="eyebrow">Trend review</p><h2>No broader pattern established</h2><p>The current public sample is too small for claims about national direction, frequency, or motive. Physical-safety preparedness remains relevant because it is actionable even when event volume is low.</p><p>Coverage framing, source diversity, geography, and later corrections remain part of the manual narrative audit.</p></section>
+      <section><p class="eyebrow">Recommended actions</p><h2>This week’s checklist</h2><ol class="weekly-actions">${weeklyBulletin.actions.map(action => `<li>${action}</li>`).join("")}</ol></section>
+    </div>
+    <aside class="weekly-sources"><div><p class="eyebrow">Monitoring references</p><h2>Start with official sources</h2></div><div><a href="https://www.fbi.gov/feeds/national-press-releases" target="_blank" rel="noreferrer">FBI national releases ↗</a><a href="https://www.weather.gov/alerts" target="_blank" rel="noreferrer">National Weather Service alerts ↗</a><a href="https://www.cisa.gov/news-events/cybersecurity-advisories" target="_blank" rel="noreferrer">CISA advisories ↗</a><a href="#/standards">Editorial standards →</a></div></aside>
+  </article>`;
 }
 
 function incidentsPage() {
@@ -386,12 +443,15 @@ function route() {
   else if (path === "/latest") main.innerHTML = latestPage();
   else if (path === "/signals") main.innerHTML = signalsPage();
   else if (path === "/radar") main.innerHTML = radarPage();
+  else if (path === "/weekly") main.innerHTML = weeklyPage();
   else if (path === "/incidents") main.innerHTML = incidentsPage();
   else if (path === "/standards") main.innerHTML = standardsPage();
   else if (path === "/subscribe") main.innerHTML = subscribePage();
   else if (path === "/about") main.innerHTML = aboutPage();
   else if (path.startsWith("/article/")) main.innerHTML = articlePage(articles.find(a => a.slug === path.split("/").pop()));
   else main.innerHTML = notFoundPage();
+  const titles = { "/": "Church Safety Threat Bulletin", "/radar": "Threat Radar", "/weekly": "Weekly Security Bulletin", "/incidents": "Verified Incidents", "/signals": "Signal Desk", "/standards": "Editorial Standards" };
+  document.title = `${titles[path] || "Intelligence Dashboard"} | Cornerstone Digital`;
   document.querySelector("#mobile-menu").classList.remove("open");
   document.querySelector("#menu-button").setAttribute("aria-expanded", "false");
   window.scrollTo(0, 0);
@@ -399,6 +459,7 @@ function route() {
 }
 
 function bindPageEvents() {
+  document.querySelector("[data-print-bulletin]")?.addEventListener("click", () => window.print());
   document.querySelectorAll("[data-category]").forEach(button => button.addEventListener("click", () => {
     document.querySelectorAll("[data-category]").forEach(b => b.classList.remove("active"));
     button.classList.add("active");
