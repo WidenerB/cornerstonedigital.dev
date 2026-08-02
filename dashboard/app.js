@@ -291,16 +291,24 @@ function eventLedger() {
   return events.map(incident => {
     const date = new Date(`${incident.eventDate}T12:00:00Z`);
     const sourceNames = incident.sources.map(source => source.publisher).join(" · ");
-    return `<article class="security-event">
-      <time class="security-event-date" datetime="${incident.eventDate}"><span>${date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })}</span><strong>${date.getUTCDate()}</strong><small>${date.getUTCFullYear()}</small></time>
-      <div class="security-event-body">
-        <div class="security-event-meta"><span class="severity severity-${incident.severityAtEvent}">${incident.severityAtEvent}</span><span>${incident.location.city}, ${incident.location.region}</span><span>Status: ${incident.currentStatus}</span></div>
-        <h2>${incident.title}</h2><p>${incident.deck}</p>
-        <div class="security-event-tags">${incident.categories.map(category => `<span>${categoryLabel(category)}</span>`).join("")}</div>
-        <dl><div><dt>Outcome</dt><dd>${incident.outcome}</dd></div><div><dt>Source record</dt><dd>${sourceNames}</dd></div><div><dt>Trend use</dt><dd>Retained for comparison; one event does not establish a pattern.</dd></div></dl>
+    return `<details class="security-event">
+      <summary class="security-event-summary">
+        <time class="security-event-date" datetime="${incident.eventDate}"><span>${date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })}</span><strong>${date.getUTCDate()}</strong><small>${date.getUTCFullYear()}</small></time>
+        <div class="security-event-head">
+          <div class="security-event-meta"><span class="severity severity-${incident.severityAtEvent}">${incident.severityAtEvent}</span><span>${incident.location.city}, ${incident.location.region}</span><span>${incident.currentStatus}</span></div>
+          <h2>${incident.title}</h2>
+        </div>
+        <span class="security-event-toggle" aria-hidden="true"></span>
+      </summary>
+      <div class="security-event-details">
+        <div class="security-event-body">
+          <p>${incident.deck}</p>
+          <div class="security-event-tags">${incident.categories.map(category => `<span>${categoryLabel(category)}</span>`).join("")}</div>
+          <dl><div><dt>Outcome</dt><dd>${incident.outcome}</dd></div><div><dt>Source record</dt><dd>${sourceNames}</dd></div><div><dt>Trend use</dt><dd>Retained for comparison; one event does not establish a pattern.</dd></div></dl>
+        </div>
+        <div class="security-event-action"><span>${incident.sources.length} retained source${incident.sources.length === 1 ? "" : "s"}</span><a class="button button-dark" href="incidents/${incident.slug}.html">Open full record</a></div>
       </div>
-      <div class="security-event-action"><span>${incident.sources.length} retained sources</span><a class="button button-dark" href="incidents/${incident.slug}.html">Open full record</a></div>
-    </article>`;
+    </details>`;
   }).join("");
 }
 
@@ -322,13 +330,12 @@ function radarPage() {
   const events = orderedIncidents();
   const latestUpdate = events[0]?.updatedAt ? readableIncidentDate(events[0].updatedAt.slice(0, 10)) : "No public update";
   return `<section class="page-shell event-ledger-page">
-    <div class="page-intro"><h1>Threat radar</h1><p>A running, source-linked list of important church and ministry security events. Trend notes describe the public record without turning isolated incidents into national claims.</p></div>
+    <div class="page-intro compact-page-intro"><h1>Threat radar</h1><p>Verified security events, presented newest first. Open an event only when you need its sources, outcome, or trend context.</p></div>
     <div class="radar-status-line"><p class="eyebrow">Verified public records only</p><span>Latest retained update: ${latestUpdate}</span></div>
-    <div class="dashboard-summary event-summary">
-      <div class="summary-stat"><span>Verified events</span><strong>${events.length}</strong></div>
-      <div class="summary-stat"><span>Active status</span><strong>${events.filter(event => !["contained", "resolved"].includes(event.currentStatus)).length}</strong></div>
-      <div class="summary-stat"><span>Represented regions</span><strong>${new Set(events.map(event => event.location.region)).size}</strong></div>
-      <div class="summary-stat"><span>Trend confidence</span><strong>${events.length < 3 ? "Limited" : "Developing"}</strong></div>
+    <div class="radar-overview" aria-label="Threat radar overview">
+      <div><strong>${events.length}</strong><span>Verified events</span></div>
+      <div><strong>${events.filter(event => !["contained", "resolved"].includes(event.currentStatus)).length}</strong><span>Active status</span></div>
+      <div><strong>${events.length < 3 ? "Limited" : "Developing"}</strong><span>Trend confidence</span></div>
     </div>
     <section class="trend-section" aria-labelledby="trend-heading"><div class="bulletin-section-heading"><div><p class="eyebrow">Relevant trends</p><h2 id="trend-heading">What the event record supports</h2></div><p>Counts reflect this site’s verified public archive, not the total number of events nationwide.</p></div><div class="trend-grid">${trendCards()}</div></section>
     <section class="event-ledger" aria-labelledby="event-ledger-heading"><div class="bulletin-section-heading"><div><p class="eyebrow">Running event list</p><h2 id="event-ledger-heading">Important security events</h2></div><p>Newest first. Events appear only after primary-source verification, uncertainty review, and editorial approval.</p></div>${eventLedger()}</section>
@@ -348,11 +355,11 @@ function weeklyPage() {
       <div><span>Trend confidence</span><strong>${events.length < 3 ? "Limited" : "Developing"}</strong></div>
     </div>
     <section class="weekly-lead"><p class="eyebrow">Executive summary</p><h2>${weeklyBulletin.headline}</h2><p>${weeklyBulletin.summary}</p><button class="button button-outline" type="button" data-print-bulletin>Print bulletin</button></section>
-    <div class="weekly-grid">
-      <section><p class="eyebrow">Evidence and confidence</p><h2>What changed this week</h2><p>${periodEvents.length ? `${periodEvents.length} verified event record${periodEvents.length === 1 ? " was" : "s were"} added during this bulletin period.` : "No new incident passed the public verification and publication gates during this bulletin period."}</p><p>Discovery volume is not treated as event volume. Unverified feed items and social leads remain outside this public summary.</p></section>
-      <section><p class="eyebrow">Carry-forward record</p><h2>${latest ? latest.title : "No verified incident retained"}</h2><p>${latest ? `${latest.outcome}. ${latest.reportedNotEstablished?.[0] || "No additional uncertainty note is available."}` : "The public archive does not currently contain a verified incident."}</p>${latest ? `<a class="rail-link" href="incidents/${latest.slug}.html">Read the source record →</a>` : ""}</section>
-      <section><p class="eyebrow">Trend review</p><h2>No broader pattern established</h2><p>The current public sample is too small for claims about national direction, frequency, or motive. Physical-safety preparedness remains relevant because it is actionable even when event volume is low.</p><p>Coverage framing, source diversity, geography, and later corrections remain part of the manual narrative audit.</p></section>
-      <section><p class="eyebrow">Recommended actions</p><h2>This week’s checklist</h2><ol class="weekly-actions">${weeklyBulletin.actions.map(action => `<li>${action}</li>`).join("")}</ol></section>
+    <div class="weekly-disclosures">
+      <details class="weekly-disclosure"><summary><div><span>01</span><h2>What changed this week</h2></div><span class="disclosure-toggle" aria-hidden="true"></span></summary><div class="weekly-disclosure-body"><p class="eyebrow">Evidence and confidence</p><p>${periodEvents.length ? `${periodEvents.length} verified event record${periodEvents.length === 1 ? " was" : "s were"} added during this bulletin period.` : "No new incident passed the public verification and publication gates during this bulletin period."}</p><p>Discovery volume is not treated as event volume. Unverified feed items and social leads remain outside this public summary.</p></div></details>
+      <details class="weekly-disclosure"><summary><div><span>02</span><h2>Carry-forward record</h2></div><span class="disclosure-toggle" aria-hidden="true"></span></summary><div class="weekly-disclosure-body"><p class="eyebrow">Latest retained event</p><h3>${latest ? latest.title : "No verified incident retained"}</h3><p>${latest ? `${latest.outcome}. ${latest.reportedNotEstablished?.[0] || "No additional uncertainty note is available."}` : "The public archive does not currently contain a verified incident."}</p>${latest ? `<a class="rail-link" href="incidents/${latest.slug}.html">Read the source record →</a>` : ""}</div></details>
+      <details class="weekly-disclosure"><summary><div><span>03</span><h2>Trend review</h2></div><span class="disclosure-toggle" aria-hidden="true"></span></summary><div class="weekly-disclosure-body"><p class="eyebrow">Assessment</p><h3>No broader pattern established</h3><p>The current public sample is too small for claims about national direction, frequency, or motive. Physical-safety preparedness remains relevant because it is actionable even when event volume is low.</p><p>Coverage framing, source diversity, geography, and later corrections remain part of the manual narrative audit.</p></div></details>
+      <details class="weekly-disclosure"><summary><div><span>04</span><h2>Recommended actions</h2></div><span class="disclosure-toggle" aria-hidden="true"></span></summary><div class="weekly-disclosure-body"><p class="eyebrow">This week’s checklist</p><ol class="weekly-actions">${weeklyBulletin.actions.map(action => `<li>${action}</li>`).join("")}</ol></div></details>
     </div>
     <aside class="weekly-sources"><div><p class="eyebrow">Monitoring references</p><h2>Start with official sources</h2></div><div><a href="https://www.fbi.gov/feeds/national-press-releases" target="_blank" rel="noreferrer">FBI national releases ↗</a><a href="https://www.weather.gov/alerts" target="_blank" rel="noreferrer">National Weather Service alerts ↗</a><a href="https://www.cisa.gov/news-events/cybersecurity-advisories" target="_blank" rel="noreferrer">CISA advisories ↗</a><a href="#/standards">Editorial standards →</a></div></aside>
   </article>`;
@@ -459,7 +466,13 @@ function route() {
 }
 
 function bindPageEvents() {
-  document.querySelector("[data-print-bulletin]")?.addEventListener("click", () => window.print());
+  document.querySelector("[data-print-bulletin]")?.addEventListener("click", () => {
+    const disclosures = [...document.querySelectorAll(".weekly-disclosure")];
+    const openStates = disclosures.map(disclosure => disclosure.open);
+    disclosures.forEach(disclosure => { disclosure.open = true; });
+    window.print();
+    disclosures.forEach((disclosure, index) => { disclosure.open = openStates[index]; });
+  });
   document.querySelectorAll("[data-category]").forEach(button => button.addEventListener("click", () => {
     document.querySelectorAll("[data-category]").forEach(b => b.classList.remove("active"));
     button.classList.add("active");
