@@ -291,24 +291,16 @@ function eventLedger() {
   return events.map(incident => {
     const date = new Date(`${incident.eventDate}T12:00:00Z`);
     const sourceNames = incident.sources.map(source => source.publisher).join(" · ");
-    return `<details class="security-event">
-      <summary class="security-event-summary">
-        <time class="security-event-date" datetime="${incident.eventDate}"><span>${date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })}</span><strong>${date.getUTCDate()}</strong><small>${date.getUTCFullYear()}</small></time>
-        <div class="security-event-head">
-          <div class="security-event-meta"><span class="severity severity-${incident.severityAtEvent}">${incident.severityAtEvent}</span><span>${incident.location.city}, ${incident.location.region}</span><span>${incident.currentStatus}</span></div>
-          <h2>${incident.title}</h2>
-        </div>
-        <span class="security-event-toggle" aria-hidden="true"></span>
-      </summary>
-      <div class="security-event-details">
-        <div class="security-event-body">
-          <p>${incident.deck}</p>
-          <div class="security-event-tags">${incident.categories.map(category => `<span>${categoryLabel(category)}</span>`).join("")}</div>
-          <dl><div><dt>Outcome</dt><dd>${incident.outcome}</dd></div><div><dt>Source record</dt><dd>${sourceNames}</dd></div><div><dt>Trend use</dt><dd>Retained for comparison; one event does not establish a pattern.</dd></div></dl>
-        </div>
-        <div class="security-event-action"><span>${incident.sources.length} retained source${incident.sources.length === 1 ? "" : "s"}</span><a class="button button-dark" href="incidents/${incident.slug}.html">Open full record</a></div>
+    return `<article class="security-event">
+      <time class="security-event-date" datetime="${incident.eventDate}"><span>${date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })}</span><strong>${date.getUTCDate()}</strong><small>${date.getUTCFullYear()}</small></time>
+      <div class="security-event-body">
+        <div class="security-event-meta"><span class="severity severity-${incident.severityAtEvent}">${incident.severityAtEvent}</span><span>${incident.location.city}, ${incident.location.region}</span><span>${incident.currentStatus}</span></div>
+        <h2>${incident.title}</h2>
+        <p>${incident.deck}</p>
+        <div class="security-event-tags">${incident.categories.map(category => `<span>${categoryLabel(category)}</span>`).join("")}</div>
       </div>
-    </details>`;
+      <div class="security-event-action"><span>${incident.sources.length} retained source${incident.sources.length === 1 ? "" : "s"}</span><small>${sourceNames}</small><a class="button button-dark" href="incidents/${incident.slug}.html">Full record</a></div>
+    </article>`;
   }).join("");
 }
 
@@ -330,7 +322,7 @@ function radarPage() {
   const events = orderedIncidents();
   const latestUpdate = events[0]?.updatedAt ? readableIncidentDate(events[0].updatedAt.slice(0, 10)) : "No public update";
   return `<section class="page-shell event-ledger-page">
-    <div class="page-intro compact-page-intro"><h1>Threat radar</h1><p>Verified security events, presented newest first. Open an event only when you need its sources, outcome, or trend context.</p></div>
+    <div class="page-intro compact-page-intro"><h1>Threat radar</h1><p>Verified security events, presented newest first. Dates, status, location, and the essential event summary stay visible at a glance.</p></div>
     <div class="radar-status-line"><p class="eyebrow">Verified public records only</p><span>Latest retained update: ${latestUpdate}</span></div>
     <div class="radar-overview" aria-label="Threat radar overview">
       <div><strong>${events.length}</strong><span>Verified events</span></div>
