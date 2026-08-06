@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A public Cornerstone Digital prototype showing configurable church security workflows, sources, reviews, readiness governance, and onboarding." />
+    <meta name="theme-color" content="#f3efe6" />
+    <link rel="canonical" href="https://cornerstonedigital.dev/workspace-demo/onboarding/" />
+    <title>Workspace Onboarding Demo | Cornerstone Digital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Caslon+Display&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/dashboard/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="/workspace-demo/" aria-label="Cornerstone Digital workspace demo home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Corner Stone <em>Digital</em></span></a>
+      <nav class="desktop-nav" aria-label="Primary navigation"></nav>
+      <div class="header-actions">
+        <button class="icon-button" id="search-button" aria-label="Search" title="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg></button>
+        <a class="button button-dark desktop-subscribe context-action" href="/dashboard/">Public bulletin</a>
+        <button class="menu-button" id="menu-button" aria-expanded="false" aria-controls="mobile-menu">Menu</button>
+      </div>
+      <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation"></nav>
+    </header>
+    <main id="main"></main>
+    <footer class="site-footer">
+      <div class="footer-brand"><span class="brand-mark brand-mark-light" aria-hidden="true"><i></i><i></i><i></i></span><p>Corner Stone <em>Digital</em></p></div>
+      <p class="footer-statement">Signal over noise.<br />Context over reaction.</p>
+      <div class="footer-links"><a href="/dashboard/">Public bulletin</a><a href="/workspace-demo/">Workspace demo</a><a href="/workspace-demo/review/">Review queue</a><a href="/workspace-demo/sources/">Source configuration</a><a href="/workspace-demo/onboarding/">Onboarding</a><a href="/workspace-demo/posture-criteria/">Posture criteria</a><a href="https://cornerstonedigital.dev/">Main site</a><a href="mailto:admin@cornerstonedigital.dev">Contact</a><span>© <span id="year"></span></span></div>
+    </footer>
+    <dialog class="search-dialog" id="search-dialog">
+      <form method="dialog" class="search-header"><label for="search-input">Search the briefing</label><button class="icon-button" value="close" aria-label="Close search">×</button></form>
+      <input id="search-input" type="search" placeholder="Try “infrastructure” or “policy”" autocomplete="off" />
+      <div id="search-results" class="search-results" aria-live="polite"></div>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/dashboard/content/content-data.js"></script>
+    <script src="/dashboard/app.js?v=workspace-paths-3"></script>
+  </body>
+</html>

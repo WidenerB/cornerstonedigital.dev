@@ -129,11 +129,11 @@ const weeklyBulletin = window.CSD_CONTENT?.bulletins?.[0] || {
 };
 
 const workspaceSources = [
-  { id: "cornerstone", name: "Cornerstone Verified Events", type: "Shared", scope: "National", trust: "Verified", publication: "Automatic", health: "Sample: current", state: "healthy", enabled: true },
-  { id: "county", name: "Example County Public Safety", type: "Official feed", scope: "Sample county", trust: "Primary", publication: "Approval required", health: "Sample: checked recently", state: "healthy", enabled: true },
-  { id: "municipal", name: "Example City Emergency Management", type: "Official feed", scope: "Sample city", trust: "Primary", publication: "Approval required", health: "Sample: stale feed", state: "stale", enabled: true },
-  { id: "intake", name: "Demonstration Church Intake", type: "Email intake", scope: "Simulated internal", trust: "Restricted", publication: "Manual", health: "Sample: credentials needed", state: "error", enabled: false },
-  { id: "community", name: "Sample Community Leads", type: "Discovery", scope: "Sample local", trust: "Discovery only", publication: "Never automatic", health: "Sample: paused", state: "paused", enabled: false }
+  { id: "cornerstone", name: "Cornerstone Verified Events", type: "Shared", scope: "National", trust: "Verified", health: "Current", state: "healthy", enabled: true, actions: ["Yes", "No", "Yes", "Threshold", "Eligible", "Approval"] },
+  { id: "county", name: "Example County Public Safety", type: "Official feed", scope: "Sample county", trust: "Primary", health: "Checked recently", state: "healthy", enabled: true, actions: ["Yes", "Yes", "After review", "Approval", "Eligible", "Approval"] },
+  { id: "municipal", name: "Example City Emergency Management", type: "Official feed", scope: "Sample city", trust: "Primary", health: "Stale feed", state: "stale", enabled: true, actions: ["Yes", "Yes", "After review", "No", "No", "No"] },
+  { id: "intake", name: "Demonstration Church Intake", type: "Email intake", scope: "Simulated internal", trust: "Restricted", health: "Credentials needed", state: "error", enabled: false, actions: ["Yes", "Yes", "Restricted", "Approval", "No", "Never"] },
+  { id: "community", name: "Sample Community Leads", type: "Discovery", scope: "Sample local", trust: "Discovery only", health: "Paused", state: "paused", enabled: false, actions: ["Yes", "Always", "No", "Never", "No", "Never"] }
 ];
 
 const reviewItems = [
@@ -144,6 +144,21 @@ const reviewItems = [
 
 const main = document.querySelector("#main");
 const toast = document.querySelector("#toast");
+
+const demoStateKey = "cornerstone-workspace-demo";
+function getDemoState() {
+  try { return JSON.parse(sessionStorage.getItem(demoStateKey)) || {}; } catch (_) { return {}; }
+}
+function saveDemoState(patch) {
+  const next = { ...getDemoState(), ...patch };
+  sessionStorage.setItem(demoStateKey, JSON.stringify(next));
+  return next;
+}
+function sourceIsEnabled(source) {
+  const saved = getDemoState().sources?.[source.id];
+  return typeof saved === "boolean" ? saved : source.enabled;
+}
+function workspaceUrl(segment = "") { return `/workspace-demo/${segment}`; }
 
 function meta(article) {
   return `<div class="story-meta"><span>${article.author}</span><i class="meta-dot"></i><span>${article.date}</span><i class="meta-dot"></i><span>${article.minutes} min read</span></div>`;
@@ -176,51 +191,88 @@ function workspacePage() {
   return `<section class="workspace-shell">
     <div class="simulation-notice" role="note"><strong>Public workspace simulation</strong><span>Demonstration Church, all people, locations, records, timestamps, assignments, and system states shown below are fictional demonstration data. This is not an authenticated or monitored church account.</span></div>
     <header class="workspace-masthead">
-      <div><p class="workspace-overline">Church workspace prototype <span>Demonstration data</span></p><h1>Demonstration Church<br><em>Security Brief</em></h1><p>Sample coverage: Example County, a fictional local area, and national church events</p></div>
-      <aside class="workspace-posture"><div class="demo-data-badge">Demonstration data</div><span>Church-selected readiness posture</span><strong>Routine</strong><p>Sample posture only. This is not a government or law-enforcement threat level.</p><dl><div><dt>Authority</dt><dd>Sample Security Administrator</dd></div><div><dt>Set at</dt><dd>Simulated date and time</dd></div><div><dt>Last reviewed</dt><dd>Simulated timestamp</dd></div></dl></aside>
+      <div><p class="workspace-overline">Church workspace prototype <span>Demo</span></p><h1>Demonstration Church<br><em>Security Brief</em></h1><p>Sample coverage: Example County, a fictional local area, and national church events</p></div>
+      <aside class="workspace-posture"><span>Church-selected readiness posture</span><strong>Routine</strong><p>Sample posture only. This is not a government or law-enforcement threat level. <a href="${workspaceUrl("posture-criteria/")}">How posture levels are determined →</a></p><dl><div><dt>Authority</dt><dd>Sample Security Administrator</dd></div><div><dt>Set at</dt><dd>Simulated date and time</dd></div><div><dt>Last reviewed</dt><dd>Simulated timestamp</dd></div></dl></aside>
     </header>
-    <div class="prototype-banner"><strong>Church workspace prototype</strong><span>Authentication, tenant isolation, persistent acknowledgments, credentials, and private records are not implemented. Do not enter or infer real operational information.</span></div>
+    <div class="prototype-banner"><strong>Church workspace prototype</strong><span>Authentication, tenant isolation, persistent acknowledgments, credentials, and private records are not implemented.</span><a href="${workspaceUrl("onboarding/")}">Start sample onboarding →</a></div>
     <div class="workspace-grid">
       <section class="workspace-main">
-        <div class="workspace-section-head"><div><p class="eyebrow">Demonstration review queue</p><h2>Three simulated items</h2></div><a href="#/review">Open prototype queue →</a></div>
-        ${reviewItems.map((item, index) => `<article class="attention-item"><span class="attention-number">0${index + 1}</span><div><div class="item-labels"><span>Demonstration data</span><span>${item.trust}</span><span>${item.category}</span></div><h3>${item.title}</h3><p>${item.relevance}</p></div><div class="attention-status"><span>${item.state}</span><time>${item.received}</time></div></article>`).join("")}
-        <div class="workspace-section-head next-actions"><div><p class="eyebrow">Sample team workflow</p><h2>Demonstration assignments</h2></div><span class="audience-label">Demonstration data</span></div>
-        <div class="action-list"><label><input type="checkbox" checked><span><strong>Confirm sample team roles</strong><small>Simulated completion by Team Member A · Demonstration data</small></span></label><label><input type="checkbox"><span><strong>Review sample facilities checklist</strong><small>Simulated assignment · Demonstration data</small></span></label><label><input type="checkbox"><span><strong>Review example official notices</strong><small>Simulated due time · Demonstration data</small></span></label></div>
+        <div class="workspace-section-head"><div><p class="eyebrow">Demonstration review queue</p><h2>Three simulated items</h2></div><a href="${workspaceUrl("review/")}">Open prototype queue →</a></div>
+        ${reviewItems.map((item, index) => `<article class="attention-item"><span class="attention-number">0${index + 1}</span><div><div class="item-labels"><span class="sample-data-label">Sample data</span><span>${item.trust}</span><span>${item.category}</span></div><h3>${item.title}</h3><p>${item.relevance}</p></div><div class="attention-status"><span>${item.state}</span><time>${item.received}</time></div></article>`).join("")}
+        <div class="workspace-section-head next-actions"><div><p class="eyebrow">Sample team workflow</p><h2>Demonstration assignments</h2></div><span class="audience-label">Sample data</span></div>
+        <div class="action-list"><label><input type="checkbox" checked><span><strong>Confirm sample team roles</strong><small>Simulated completion by Team Member A</small></span></label><label><input type="checkbox"><span><strong>Review sample facilities checklist</strong><small>Simulated assignment</small></span></label><label><input type="checkbox"><span><strong>Review example official notices</strong><small>Simulated due time</small></span></label></div>
       </section>
       <aside class="workspace-rail">
-        <section><div class="demo-data-badge">Demonstration data</div><p class="eyebrow">Simulated source health</p><h2>${workspaceSources.filter(source => source.enabled).length} sample enabled sources</h2>${workspaceSources.slice(0, 4).map(source => `<div class="source-health"><i class="source-state-${source.state}"></i><span><strong>${source.name}</strong><small>${source.health} · Demonstration data</small></span></div>`).join("")}<a href="#/sources">View sample configuration →</a></section>
-        <section class="workspace-mode"><p class="eyebrow">Source mode</p><strong>Cornerstone + church sources</strong><p>National intelligence is combined with approved local and internal sources.</p><a href="#/sources">Review configuration →</a></section>
-        <section><div class="demo-data-badge">Demonstration data</div><p class="eyebrow">Sample acknowledgment</p><div class="ack-ring"><strong>8</strong><span>of 11</span></div><p class="rail-copy">Fictional acknowledgment count. Persistent user acknowledgments are not implemented.</p></section>
+        <section><p class="eyebrow">Simulated source health <span class="sample-data-label">Sample data</span></p><h2>${workspaceSources.filter(sourceIsEnabled).length} sample enabled sources</h2>${workspaceSources.slice(0, 4).map(source => `<div class="source-health"><i class="source-state-${source.state}"></i><span><strong>${source.name}</strong><small>${source.health}</small></span></div>`).join("")}<a href="${workspaceUrl("sources/")}">View sample configuration →</a></section>
+        <section class="workspace-mode"><p class="eyebrow">Source mode</p><strong>${getDemoState().mode || "Cornerstone + church sources"}</strong><p>National intelligence is combined with approved local and internal sources.</p><a href="${workspaceUrl("sources/")}">Review configuration →</a></section>
+        <section><p class="eyebrow">Sample acknowledgment <span class="sample-data-label">Sample data</span></p><div class="ack-ring"><strong>8</strong><span>of 11</span></div><p class="rail-copy">Fictional acknowledgment count. Persistent user acknowledgments are not implemented.</p></section>
       </aside>
     </div>
+    <p class="workspace-disclaimer">Public demonstration only. All identities, records, assignments, timestamps, settings, and system states are fictional sample data. Changes are retained only for this browser session.</p>
   </section>`;
 }
 
 function sourcesPage() {
-  return `<section class="page-shell workspace-page"><div class="simulation-notice compact" role="note"><strong>Demonstration data</strong><span>All sources, states, settings, credentials, and timestamps on this public page are fictional examples. No listed agency is being monitored by this prototype.</span></div><header class="workspace-page-head"><div><p class="workspace-overline">Demonstration Church · Configuration prototype</p><h1>Sources</h1><p>Explore how a church could control what enters its workspace, how it is trusted, and what requires approval.</p></div><button class="button button-dark" data-demo-action="Demonstration only — adding sources requires the secure application">Add sample source</button></header>
-    <div class="mode-selector"><div><div class="demo-data-badge">Demonstration data</div><p class="eyebrow">Sample active configuration</p><h2>Cornerstone + church sources</h2><p>Recommended for most churches. Cornerstone national intelligence is combined with approved official, local, denominational, and internal sources.</p></div><div class="mode-options" role="radiogroup" aria-label="Source configuration mode"><label><input type="radio" name="source-mode"><span><strong>Cornerstone only</strong><small>Centrally managed feed</small></span></label><label class="selected"><input type="radio" name="source-mode" checked><span><strong>Cornerstone + church</strong><small>Shared and local sources</small></span></label><label><input type="radio" name="source-mode"><span><strong>Church sources only</strong><small>Fully organization-managed</small></span></label></div></div>
+  const mode = getDemoState().mode || "Cornerstone + church sources";
+  const modes = [{ name: "Cornerstone only", detail: "Centrally managed feed" }, { name: "Cornerstone + church sources", detail: "Shared and local sources" }, { name: "Church sources only", detail: "Fully organization-managed" }];
+  return `<section class="page-shell workspace-page"><div class="simulation-notice compact" role="note"><strong>Public workspace simulation</strong><span>All sources, states, settings, credentials, and timestamps are fictional examples. No listed agency is being monitored.</span></div><header class="workspace-page-head"><div><p class="workspace-overline">Demonstration Church · Configuration prototype <span>Demo</span></p><h1>Sources</h1><p>Explore how a church could control what enters its workspace, how it is trusted, and what requires approval.</p></div><button class="button button-dark" data-demo-action="Demonstration only — adding sources requires the secure application">Add sample source</button></header>
+    <div class="preview-controls-note"><strong>Preview controls only.</strong> Changes are retained for this browser session and are not saved to an account.</div>
+    <div class="mode-selector"><div><p class="eyebrow">Sample active configuration</p><h2>${mode}</h2><p>Recommended configurations combine Cornerstone national intelligence with approved official, local, denominational, and internal sources.</p></div><div class="mode-options" role="radiogroup" aria-label="Source configuration mode">${modes.map(item => `<label class="${item.name === mode ? "selected" : ""}"><input type="radio" name="source-mode" value="${item.name}" ${item.name === mode ? "checked" : ""}><span><strong>${item.name}</strong><small>${item.detail}</small></span></label>`).join("")}</div></div>
     <div class="configuration-grid">
-      <section class="config-card"><div class="demo-data-badge">Demonstration data</div><p class="eyebrow">Category inclusion</p><h2>Choose ownership by topic</h2><div class="config-rows"><div><span>National incidents</span><strong>Cornerstone</strong></div><div><span>Weather and local notices</span><strong>Church sources</strong></div><div><span>Internal matters</span><strong>Church only</strong></div><div><span>Ministry guidance</span><strong>Denominational</strong></div></div></section>
-      <section class="config-card"><div class="demo-data-badge">Demonstration data</div><p class="eyebrow">Ingestion and notice rules</p><h2>Set review thresholds</h2><div class="config-rows"><div><span>Verified Cornerstone items</span><strong>Automatic</strong></div><div><span>Local official items</span><strong>Approval required</strong></div><div><span>Discovery items</span><strong>Review only</strong></div><div><span>Notification threshold</span><strong>Sample: elevated</strong></div></div></section>
-      <section class="config-card"><div class="demo-data-badge">Demonstration data</div><p class="eyebrow">Geographic relevance</p><h2>Define the sample area</h2><div class="config-rows"><div><span>Primary county</span><strong>Example County</strong></div><div><span>Nearby area</span><strong>Sample adjacent counties</strong></div><div><span>Custom radius</span><strong>Sample: 25 miles</strong></div><div><span>Target similarity</span><strong>Houses of worship</strong></div></div></section>
-      <section class="config-card"><div class="demo-data-badge">Demonstration data</div><p class="eyebrow">Credentials and validation</p><h2>Test before enabling</h2><div class="config-rows"><div><span>Credential storage</span><strong>Backend required</strong></div><div><span>Connection test</span><strong>Not implemented</strong></div><div><span>Stale-feed rule</span><strong>Sample: warn after 6h</strong></div><div><span>Error notification</span><strong>Sample administrators</strong></div></div></section>
+      <section class="config-card"><p class="eyebrow">Category inclusion</p><h2>Choose ownership by topic</h2><div class="config-rows"><div><span>National incidents</span><strong>Cornerstone</strong></div><div><span>Weather and local notices</span><strong>Church sources</strong></div><div><span>Internal matters</span><strong>Church only</strong></div><div><span>Ministry guidance</span><strong>Denominational</strong></div></div></section>
+      <section class="config-card"><p class="eyebrow">Ingestion and notice rules</p><h2>Set review thresholds</h2><div class="config-rows"><div><span>Verified Cornerstone items</span><strong>Automatic ingestion</strong></div><div><span>Local official items</span><strong>Review queue</strong></div><div><span>Discovery items</span><strong>Review only</strong></div><div><span>Notification threshold</span><strong>Sample: elevated</strong></div></div></section>
+      <section class="config-card"><p class="eyebrow">Geographic relevance</p><h2>Define the sample area</h2><div class="config-rows"><div><span>Primary county</span><strong>Example County</strong></div><div><span>Nearby area</span><strong>Sample adjacent counties</strong></div><div><span>Custom radius</span><strong>Sample: 25 miles</strong></div><div><span>Target similarity</span><strong>Houses of worship</strong></div></div></section>
+      <section class="config-card"><p class="eyebrow">Credentials and validation</p><h2>Test before enabling</h2><div class="config-rows"><div><span>Credential storage</span><strong>Backend required</strong></div><div><span>Connection test</span><strong>Not implemented</strong></div><div><span>Stale-feed rule</span><strong>Sample: warn after 6h</strong></div><div><span>Error notification</span><strong>Sample administrators</strong></div></div></section>
     </div>
     <div class="source-guardrail"><strong>Monitoring is not verification.</strong><span>Discovery-source items always enter the review queue and can never publish automatically.</span></div>
-    <div class="source-table-wrap"><table class="source-table"><thead><tr><th>Sample source</th><th>Type / scope</th><th>Trust</th><th>Publication</th><th>Demonstration health</th><th>Sample state</th></tr></thead><tbody>${workspaceSources.map(source => `<tr><td><span class="demo-data-badge">Demonstration data</span><strong>${source.name}</strong><small>${source.id === "intake" ? "sample-intake@example.invalid" : `sample-${source.id}`}</small></td><td>${source.type}<small>${source.scope}</small></td><td><span class="trust trust-${source.trust.toLowerCase().replaceAll(" ", "-")}">${source.trust}</span></td><td>${source.publication}</td><td><span class="health-state health-${source.state}">${source.health}</span></td><td><button class="source-toggle ${source.enabled ? "on" : ""}" data-source-toggle aria-pressed="${source.enabled}" aria-label="Toggle sample state for ${source.name}"><i></i></button></td></tr>`).join("")}</tbody></table></div>
+    <div class="source-table-wrap"><table class="source-table source-routing-table"><thead><tr><th>Sample source</th><th>Trust</th><th>Ingest</th><th>Queue</th><th>Internal</th><th>Notify</th><th>Bulletin</th><th>Public</th><th>Health</th><th>Enabled</th></tr></thead><tbody>${workspaceSources.map(source => `<tr><td><span class="sample-data-label">Sample data</span><strong>${source.name}</strong><small>${source.type} · ${source.scope}</small></td><td><span class="trust trust-${source.trust.toLowerCase().replaceAll(" ", "-")}">${source.trust}</span></td>${source.actions.map(action => `<td>${action}</td>`).join("")}<td><span class="health-state health-${source.state}">${source.health}</span></td><td><button class="source-toggle ${sourceIsEnabled(source) ? "on" : ""}" data-source-toggle data-source-id="${source.id}" aria-pressed="${sourceIsEnabled(source)}" aria-label="Toggle sample state for ${source.name}"><i></i></button></td></tr>`).join("")}</tbody></table></div>
+    <p class="workspace-disclaimer">Public demonstration only. All source records and routing decisions are fictional sample data. Preview changes are stored only in sessionStorage and expire when the browser session ends.</p>
   </section>`;
 }
 
 function reviewQueuePage() {
-  return `<section class="page-shell workspace-page"><div class="simulation-notice compact" role="note"><strong>Demonstration data</strong><span>Every queue item, source, decision, timestamp, and count below is simulated. This public prototype does not ingest or store church reports.</span></div><header class="workspace-page-head"><div><p class="workspace-overline">Demonstration Church · Workflow prototype</p><h1>Review queue</h1><p>This simulation shows how incoming information would remain restricted until relevance, duplication, classification, and verification requirements are resolved.</p></div><span class="queue-count">${reviewItems.length} simulated</span></header>
+  return `<section class="page-shell workspace-page"><div class="simulation-notice compact" role="note"><strong>Public workspace simulation</strong><span>Every queue item, source, decision, timestamp, and count below is fictional. This prototype does not ingest or store church reports.</span></div><header class="workspace-page-head"><div><p class="workspace-overline">Demonstration Church · Workflow prototype <span>Demo</span></p><h1>Review queue</h1><p>This simulation shows how incoming information would remain restricted until relevance, duplication, classification, and verification requirements are resolved.</p></div><span class="queue-count">${reviewItems.length} simulated</span></header>
     <div class="workflow-strip" aria-label="Content workflow">${["Collected", "Relevance", "Duplicates", "Classification", "Verification", "Review", "Approved", "Published"].map((step, index) => `<span class="${index < 2 ? "active" : ""}">${step}</span>`).join("")}</div>
-    <div class="review-layout"><div class="review-list">${reviewItems.map(item => `<article class="review-card"><div class="review-card-top"><span class="demo-data-badge">Demonstration data</span><span>${item.id}</span><span class="trust trust-${item.trust.toLowerCase()}">${item.trust}</span><time>${item.received}</time></div><p class="eyebrow">${item.source}</p><h2>${item.title}</h2><p>${item.relevance}</p><footer><span>${item.state}</span><button class="button button-outline" data-demo-action="Demonstration only — persistent review requires the secure backend">Simulate review</button></footer></article>`).join("")}</div><aside class="review-policy"><div class="demo-data-badge">Demonstration data</div><p class="eyebrow">Publication guardrail</p><h2>Discovery is a lead, never an alert.</h2><p>Community, social, scanner, and forwarded reports require verification and editorial approval. Proximity alone does not establish danger.</p><dl><div><dt>Automatic publication</dt><dd>Sample: none</dd></div><div><dt>Restricted items</dt><dd>Sample count</dd></div><div><dt>Oldest open item</dt><dd>Simulated age</dd></div></dl></aside></div>
+    <div class="review-layout"><div class="review-list">${reviewItems.map(item => `<article class="review-card"><div class="review-card-top"><span class="sample-data-label">Sample data</span><span>${item.id}</span><span class="trust trust-${item.trust.toLowerCase()}">${item.trust}</span><time>${item.received}</time></div><p class="eyebrow">${item.source}</p><h2>${item.title}</h2><p>${item.relevance}</p><footer><span>${item.state}</span><button class="button button-outline" data-demo-action="Demonstration only — persistent review requires the secure backend">Simulate review</button></footer></article>`).join("")}</div><aside class="review-policy"><p class="eyebrow">Publication guardrail</p><h2>Discovery is a lead, never an alert.</h2><p>Community, social, scanner, and forwarded reports require verification and editorial approval. Proximity alone does not establish danger.</p><dl><div><dt>Automatic publication</dt><dd>Sample: none</dd></div><div><dt>Restricted items</dt><dd>Sample count</dd></div><div><dt>Oldest open item</dt><dd>Simulated age</dd></div></dl></aside></div>
+    <p class="workspace-disclaimer">Public demonstration only. Queue records, decisions, sources, timestamps, and counts are fictional sample data and are not persisted.</p>
   </section>`;
+}
+
+function onboardingPage() {
+  const steps = [
+    ["01", "Church and campuses", "Demonstration Church", "One sample campus"],
+    ["02", "Geographic coverage", "Example County", "25-mile sample radius"],
+    ["03", "Source mode", getDemoState().mode || "Cornerstone + church sources", "Can be changed later"],
+    ["04", "Categories monitored", "Safety, weather, cyber, ministry guidance", "Church-selected"],
+    ["05", "Local sources", "Two official samples", "Validation required in production"],
+    ["06", "Review requirements", "Local and discovery items", "Two-step high-severity review"],
+    ["07", "Notification thresholds", "Elevated and assigned items", "Quiet hours supported"],
+    ["08", "User roles", "Owner, administrator, analyst, team member", "Least-privilege default"],
+    ["09", "Data retention", "Sample: 12 months", "Restricted reports configured separately"]
+  ];
+  return `<section class="page-shell workspace-page onboarding-page"><div class="simulation-notice compact" role="note"><strong>Public workspace simulation</strong><span>This onboarding walkthrough uses fictional sample values. Preview choices are retained only for this browser session.</span></div><header class="workspace-page-head"><div><p class="workspace-overline">Workspace onboarding <span>Demo</span></p><h1>Configure the workspace</h1><p>Connect church identity, geography, sources, review rules, people, and retention before the first dashboard is created.</p></div><span class="queue-count">9 setup decisions</span></header>
+    <div class="onboarding-layout"><div class="onboarding-steps">${steps.map(([number,title,value,note]) => `<section class="onboarding-step"><span>${number}</span><div><p class="eyebrow">${title}</p><h2>${value}</h2><p>${note}</p></div><button class="button button-outline" data-demo-action="Preview control only — this setup is not saved to an account">Edit sample</button></section>`).join("")}</div>
+    <aside class="dashboard-preview"><p class="eyebrow">Final dashboard preview</p><h2>Demonstration Church</h2><dl><div><dt>Posture</dt><dd>Routine</dd></div><div><dt>Coverage</dt><dd>Example County + national</dd></div><div><dt>Source mode</dt><dd>${getDemoState().mode || "Cornerstone + church sources"}</dd></div><div><dt>Review rule</dt><dd>Local approval required</dd></div><div><dt>Notifications</dt><dd>Elevated + assigned</dd></div><div><dt>Retention</dt><dd>12-month sample</dd></div></dl><a class="button button-dark" href="${workspaceUrl()}">Open dashboard preview</a></aside></div>
+    <p class="workspace-disclaimer">A production workspace would be created only after authenticated organization ownership, role assignment, tenant isolation, retention acceptance, and an auditable final review.</p></section>`;
+}
+
+function postureCriteriaPage() {
+  const levels = [
+    ["1", "Routine", "No verified church-selected condition requires a procedural change.", "Security Administrator", "Review at the next scheduled briefing"],
+    ["2", "Awareness", "Relevant verified context supports a focused reminder or observation.", "Security Administrator", "Expires after 72 hours unless renewed"],
+    ["3", "Heightened", "Specific verified information supports temporary readiness changes.", "Administrator + second approver", "Review every 24 hours"],
+    ["4", "Protective action", "Credible, actionable information supports defined protective measures.", "Two administrators", "Review every 4 hours"],
+    ["5", "Emergency", "An immediate condition requires emergency procedures and official coordination.", "Authorized leader with emergency override", "Expires when officially downgraded"]
+  ];
+  return `<section class="page-shell workspace-page posture-criteria-page"><div class="simulation-notice compact" role="note"><strong>Prototype policy</strong><span>These criteria demonstrate church-controlled readiness governance. They are not a government or law-enforcement threat scale.</span></div><header class="workspace-page-head"><div><p class="workspace-overline">Readiness governance <span>Demo</span></p><h1>Posture criteria</h1><p>Each level identifies evidence, authority, approval, and expiration requirements so a posture cannot remain elevated without review.</p></div><a class="button button-outline" href="${workspaceUrl()}">Back to workspace</a></header>
+    <div class="posture-levels">${levels.map(([level,name,evidence,authority,expiration]) => `<article><span>${level}</span><div><p class="eyebrow">${name}</p><h2>${evidence}</h2><dl><div><dt>Who can change it</dt><dd>${authority}</dd></div><div><dt>Expiration rule</dt><dd>${expiration}</dd></div><div><dt>Required evidence</dt><dd>Documented source, relevance assessment, and audit note</dd></div></dl></div></article>`).join("")}</div>
+    <p class="workspace-disclaimer">High-severity changes require a second approver except when an authorized emergency override is documented. Every change creates an audit event and has an explicit expiration.</p></section>`;
 }
 
 function publicBulletinPage() {
   return `<section class="bulletin-hero">
       <div class="bulletin-heading">
-        <div class="bulletin-kicker"><span>Church safety threat bulletin</span><time datetime="2026-08-02">August 2, 2026</time></div>
+        <div class="bulletin-kicker"><span>Church safety threat bulletin</span><time datetime="2026-08-02">Issued August 2, 2026</time><time datetime="2026-08-02">Reviewed through August 2, 2026</time></div>
         <p class="eyebrow">Public intelligence brief</p>
         <h1>Routine vigilance.<br><em>Clear next steps.</em></h1>
         <p class="bulletin-deck">A source-conscious readiness brief for churches and ministry teams. This bulletin does not assert a verified nationwide church-specific threat; local conditions and official instructions always take priority.</p>
@@ -510,30 +562,44 @@ function aboutPage() {
 function notFoundPage() { return `<section class="page-shell"><div class="page-intro"><h1>Not found</h1><p>That page isn’t in the dashboard. <a class="rail-link" href="#/signals">Return to the Signal Desk →</a></p></div></section>`; }
 
 function applyNavigationContext(path) {
-  const workspaceContext = ["/workspace", "/review", "/sources"].includes(path);
+  const workspaceContext = ["/workspace", "/review", "/sources", "/onboarding", "/posture-criteria"].includes(path);
   const desktop = document.querySelector(".desktop-nav");
   const mobile = document.querySelector("#mobile-menu");
   const actions = document.querySelector(".header-actions");
-  const workspaceLinks = `<a href="#/workspace">Workspace</a><a href="#/review">Review queue</a><a href="#/sources">Sources</a><a href="#/weekly">Bulletins</a><a href="#/workspace" data-demo-action="Team management requires the authenticated application">Team</a><a href="#/workspace" data-demo-action="Settings require the authenticated application">Settings</a>`;
-  const publicLinks = `<a href="#/">Public bulletin</a><a href="#/incidents">Incidents</a><a href="#/weekly">Weekly bulletin</a><a href="#/standards">Standards</a><a href="#/workspace">Workspace prototype</a>`;
+  const workspaceLinks = `<a href="${workspaceUrl()}">Workspace</a><a href="${workspaceUrl("review/")}">Review queue</a><a href="${workspaceUrl("sources/")}">Sources</a><a href="/dashboard/#/weekly">Bulletins</a><a href="${workspaceUrl()}" data-demo-action="Team management requires the authenticated application">Team</a><a href="${workspaceUrl("onboarding/")}">Settings</a>`;
+  const publicLinks = `<a href="/dashboard/">Public bulletin</a><a href="/dashboard/#/incidents">Incidents</a><a href="/dashboard/#/weekly">Weekly bulletin</a><a href="/dashboard/#/standards">Standards</a><a href="${workspaceUrl()}">Workspace prototype</a>`;
   desktop.innerHTML = workspaceContext ? workspaceLinks : publicLinks;
   mobile.innerHTML = workspaceContext ? workspaceLinks : publicLinks;
   const existingContextAction = actions.querySelector(".context-action");
   if (existingContextAction) existingContextAction.remove();
   const contextAction = document.createElement("a");
   contextAction.className = "button button-dark desktop-subscribe context-action";
-  contextAction.href = workspaceContext ? "#/" : "#/workspace";
+  contextAction.href = workspaceContext ? "/dashboard/" : workspaceUrl();
   contextAction.textContent = workspaceContext ? "Public bulletin" : "View prototype";
   actions.insertBefore(contextAction, document.querySelector("#menu-button"));
 }
 
+function currentRoute() {
+  const hashRoute = location.hash.slice(1);
+  if (hashRoute) return hashRoute;
+  const pathname = location.pathname.replace(/\/+$/, "/");
+  if (pathname.endsWith("/workspace-demo/sources/")) return "/sources";
+  if (pathname.endsWith("/workspace-demo/review/")) return "/review";
+  if (pathname.endsWith("/workspace-demo/onboarding/")) return "/onboarding";
+  if (pathname.endsWith("/workspace-demo/posture-criteria/")) return "/posture-criteria";
+  if (pathname.endsWith("/workspace-demo/")) return "/workspace";
+  return "/";
+}
+
 function route() {
-  const path = location.hash.slice(1) || "/";
+  const path = currentRoute();
   applyNavigationContext(path);
   if (path === "/") main.innerHTML = publicBulletinPage();
   else if (path === "/workspace") main.innerHTML = workspacePage();
   else if (path === "/sources") main.innerHTML = sourcesPage();
   else if (path === "/review") main.innerHTML = reviewQueuePage();
+  else if (path === "/onboarding") main.innerHTML = onboardingPage();
+  else if (path === "/posture-criteria") main.innerHTML = postureCriteriaPage();
   else if (path === "/public") main.innerHTML = publicBulletinPage();
   else if (path === "/latest") main.innerHTML = latestPage();
   else if (path === "/signals") main.innerHTML = signalsPage();
@@ -545,7 +611,7 @@ function route() {
   else if (path === "/about") main.innerHTML = aboutPage();
   else if (path.startsWith("/article/")) main.innerHTML = articlePage(articles.find(a => a.slug === path.split("/").pop()));
   else main.innerHTML = notFoundPage();
-  const titles = { "/": "Church Safety Threat Bulletin", "/workspace": "Church Workspace Prototype", "/sources": "Demonstration Source Configuration", "/review": "Demonstration Review Queue", "/public": "Church Safety Threat Bulletin", "/radar": "Threat Radar", "/weekly": "Weekly Security Bulletin", "/incidents": "Verified Incidents", "/signals": "Signal Desk", "/standards": "Editorial Standards" };
+  const titles = { "/": "Church Security Intelligence Platform", "/workspace": "Church Workspace Demo", "/sources": "Source Configuration Demo", "/review": "Review Queue Demo", "/onboarding": "Workspace Onboarding Demo", "/posture-criteria": "Readiness Posture Criteria", "/public": "Church Safety Threat Bulletin", "/radar": "Threat Radar", "/weekly": "Weekly Security Bulletin", "/incidents": "Verified Incidents", "/signals": "Signal Desk", "/standards": "Editorial Standards" };
   document.title = `${titles[path] || "Intelligence Dashboard"} | Cornerstone Digital`;
   document.querySelector("#mobile-menu").classList.remove("open");
   document.querySelector("#menu-button").setAttribute("aria-expanded", "false");
@@ -556,14 +622,21 @@ function route() {
 function bindPageEvents() {
   document.querySelectorAll("[data-source-toggle]").forEach(button => button.addEventListener("click", () => {
     const isOn = button.getAttribute("aria-pressed") === "true";
+    const state = getDemoState();
+    saveDemoState({ sources: { ...(state.sources || {}), [button.dataset.sourceId]: !isOn } });
     button.setAttribute("aria-pressed", String(!isOn));
     button.classList.toggle("on", !isOn);
     showToast(!isOn ? "Source enabled in this prototype" : "Source paused in this prototype");
   }));
-  document.querySelectorAll("[data-demo-action]").forEach(button => button.addEventListener("click", () => showToast(button.dataset.demoAction)));
+  document.querySelectorAll("[data-demo-action]").forEach(button => button.addEventListener("click", event => {
+    event.preventDefault();
+    showToast(button.dataset.demoAction);
+  }));
   document.querySelectorAll('.mode-options input[name="source-mode"]').forEach(input => input.addEventListener("change", () => {
     document.querySelectorAll(".mode-options label").forEach(label => label.classList.toggle("selected", label.contains(input)));
-    showToast("Configuration preview updated");
+    saveDemoState({ mode: input.value });
+    document.querySelector(".mode-selector h2").textContent = input.value;
+    showToast("Preview retained for this browser session");
   }));
   document.querySelector("[data-print-bulletin]")?.addEventListener("click", () => {
     const disclosures = [...document.querySelectorAll(".weekly-disclosure")];
