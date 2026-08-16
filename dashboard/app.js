@@ -582,12 +582,12 @@ function applyNavigationContext(path) {
 function currentRoute() {
   const hashRoute = location.hash.slice(1);
   if (hashRoute) return hashRoute;
-  const pathname = location.pathname.replace(/\/+$/, "/");
-  if (pathname.endsWith("/workspace-demo/sources/")) return "/sources";
-  if (pathname.endsWith("/workspace-demo/review/")) return "/review";
-  if (pathname.endsWith("/workspace-demo/onboarding/")) return "/onboarding";
-  if (pathname.endsWith("/workspace-demo/posture-criteria/")) return "/posture-criteria";
-  if (pathname.endsWith("/workspace-demo/")) return "/workspace";
+  const pathname = location.pathname.replace(/\/+$/, "");
+  if (pathname.endsWith("/workspace-demo/sources")) return "/sources";
+  if (pathname.endsWith("/workspace-demo/review")) return "/review";
+  if (pathname.endsWith("/workspace-demo/onboarding")) return "/onboarding";
+  if (pathname.endsWith("/workspace-demo/posture-criteria")) return "/posture-criteria";
+  if (pathname.endsWith("/workspace-demo")) return "/workspace";
   return "/";
 }
 
